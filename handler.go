@@ -82,7 +82,7 @@ func (sh *SmartHomeActions) serve(r *http.Request, request assistantRequest) int
 		}
 
 	case "action.devices.DISCONNECT":
-		return nil
+		return fulfiller.Disconnect()
 	}
 
 	return ErrNotSupported
@@ -123,7 +123,7 @@ func (sh *SmartHomeActions) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		RequestID: request.RequestID,
 		Payload:   payload,
 	}
-	log.Printf("replying with paylod: %+v", response.Payload)
+	log.Printf("replying with payload: %+v", response.Payload)
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
 		log.Printf("failed to encode output JSON: %+v", response)

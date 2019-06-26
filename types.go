@@ -23,7 +23,7 @@ type Device struct {
 	DeviceKey
 
 	Type            string                 `json:"type"`
-	Traits          []string               `json:"traits"`          // the possible ways this can be controleld
+	Traits          []string               `json:"traits"`          // the possible ways this can be controlled
 	WillReportState bool                   `json:"willReportState"` // true is real-time, false is polling
 	RoomHint        string                 `json:"roomHint,omitempty"`
 	Attributes      map[string]interface{} `json:"attributes,omitempty"`
@@ -87,8 +87,8 @@ func (s States) extract() map[string]interface{} {
 
 	// write known keys
 	out["online"] = s.Online
-	if s.ErrorCode.error != nil {
-		out["errorCode"] = s.ErrorCode.error
+	if errorCode := s.ErrorCode.Error(); errorCode != "" {
+		out["errorCode"] = errorCode
 	}
 	if s.DebugString != "" {
 		out["debugString"] = s.DebugString

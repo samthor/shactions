@@ -9,6 +9,14 @@ type ErrorCode struct {
 	error
 }
 
+// Error returns the internal error code, or a blank string if nil.
+func (ec ErrorCode) Error() string {
+	if ec.error != nil {
+		return ec.error.Error()
+	}
+	return ""
+}
+
 var (
 	// ErrAuthExpired indicates credentials have expired.
 	ErrAuthExpired = ErrorCode{
