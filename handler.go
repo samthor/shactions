@@ -100,7 +100,10 @@ func (sh *SmartHomeActions) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch v := payload.(type) {
 	case ErrorCode:
 		// nb. earlier than 'error', more specific
-		payload = assistantResponse{
+		payload = struct {
+			ErrorCode   string `json:"errorCode,omitempty"`
+			DebugString string `json:"debugString,omitempty"`
+		}{
 			ErrorCode: v.Error(),
 		}
 

@@ -29,16 +29,66 @@ type assistantCommand struct {
 	Executions []Exec      `json:"execution"`
 }
 
-// assistantResponse contains the top-level response type.
-type assistantResponse struct {
-	ErrorCode   string `json:"errorCode,omitempty"`
-	DebugString string `json:"debugString,omitempty"`
-}
-
 // commandResult is used inside the response to an exec request.
 type commandResult struct {
 	Devices   []string               `json:"ids"`
 	Status    string                 `json:"status"`
 	ErrorCode string                 `json:"errorCode"`
 	States    map[string]interface{} `json:"states"`
+}
+
+// resultKey is used as part of resultGroup.
+type resultKey struct {
+	Status
+	ErrorCode
+}
+
+// resultValue is used as part of resultGroup.
+type resultValue struct {
+	devices []string
+	states  []States
+}
+
+// resultGroup helps to group results from an exec request.
+type resultGroup struct {
+	m map[resultKey]resultValue
+}
+
+func (rg *resultGroup) out() []commandResult {
+	out := make([]commandResult, 0, len(rg.m))
+	for k, v := range rg.m {
+		out = append(out, commandResult{
+			Devices:   v.devices,
+			Status:    k.Status.String(),
+			ErrorCode: k.ErrorCode.Error(),
+			States:    mergeStates(v.states),
+		})
+	}
+	return out
+}
+
+func (rg *resultGroup) add(device string, s ExecStatus) {
+	if rg.m == nil {
+		rg.m = make(map[resultKey]resultValue)
+	}
+
+	k := resultKey{s.Status, s.ErrorCode}
+	v := rg.m[k]
+
+	// TODO: check for duplicates
+	v.devices = append(v.devices, device)
+	v.states = append(v.states, s.States)
+
+	rg.m[k] = v
+}
+
+func mergeStates(states []States) map[string]interface{} {
+	if len(states) == 0 {
+		return nil
+	}
+	out := states[0].extract()
+	for _, s := range states[1:] {
+		out = intersectMap(out, s.extract())
+	}
+	return out
 }
