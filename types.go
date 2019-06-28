@@ -42,7 +42,7 @@ type Exec struct {
 	Params map[string]interface{} `json:"params"`
 }
 
-// SmartHomeActions is...
+// SmartHomeActions contains the Request method, which can be used to fulfill a request.
 type SmartHomeActions struct {
 	Request func(*http.Request, string) (RequestFulfiller, error)
 }
@@ -51,22 +51,16 @@ type SmartHomeActions struct {
 type RequestFulfiller interface {
 	Sync() (string, []Device, error)
 	Query([]DeviceKey) ([]States, error)
-	Exec([]DeviceKey, []Exec) ([]ExecStatus, error)
+	Exec([]DeviceKey, []Exec) ([]States, error)
 	Disconnect() error
-}
-
-// ExecStatus is the status of executing many commands on one device.
-type ExecStatus struct {
-	Status    Status
-	ErrorCode ErrorCode // subtype of Error
-	States    States
 }
 
 // States is a helper that wraps a Map plus some known, fixed keys.
 type States struct {
-	Online      bool
+	Status      Status // for Exec only, ignored for Query
 	ErrorCode   ErrorCode
 	DebugString string
+	Online      bool
 	m           map[string]interface{}
 }
 

@@ -68,7 +68,7 @@ func (rg *resultGroup) out() []commandResult {
 	return out
 }
 
-func (rg *resultGroup) add(device string, s ExecStatus) bool {
+func (rg *resultGroup) add(device string, s States) bool {
 	if rg.m == nil {
 		rg.m = make(map[resultKey]resultValue)
 		rg.seen = make(map[string]bool)
@@ -78,7 +78,11 @@ func (rg *resultGroup) add(device string, s ExecStatus) bool {
 	v := rg.m[k]
 
 	v.devices = append(v.devices, device)
-	v.states = append(v.states, s.States)
+
+	// reset parts of States which aren't useful to Exec
+	s.Status = Unknown
+	s.ErrorCode = ErrorCode{nil}
+	v.states = append(v.states, s)
 
 	rg.m[k] = v
 
