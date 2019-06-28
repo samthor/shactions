@@ -47,7 +47,7 @@ func (sh *SmartHomeActions) serve(r *http.Request, request assistantRequest) int
 			if _, ok := devices[device.ID]; ok {
 				return errors.New("duplicate reponse from Query")
 			}
-			devices[device.ID] = s.extract()
+			devices[device.ID] = s.Extract()
 		}
 
 		return struct {

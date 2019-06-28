@@ -73,7 +73,7 @@ func (s *States) Set(key string, value interface{}) {
 }
 
 // extract converts this States into a single map.
-func (s States) extract() map[string]interface{} {
+func (s States) Extract() map[string]interface{} {
 	out := make(map[string]interface{})
 	for k, v := range s.m {
 		out[k] = v

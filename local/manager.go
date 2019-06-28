@@ -1,8 +1,11 @@
 package local
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
@@ -10,6 +13,10 @@ import (
 	"time"
 
 	sh "github.com/samthor/shactions"
+)
+
+const (
+	homegraphNotificationURL = "https://homegraph.googleapis.com/v1/devices:reportStateAndNotification"
 )
 
 type managerFulfiller struct {
@@ -39,7 +46,6 @@ func (mf *managerFulfiller) Sync() (string, []sh.Device, error) {
 
 func (mf *managerFulfiller) Query(keys []sh.DeviceKey) ([]sh.States, error) {
 	return mf.m.op(keys, false, nil)
-
 }
 
 func (mf *managerFulfiller) Exec(keys []sh.DeviceKey, exec []sh.Exec) ([]sh.States, error) {
@@ -56,7 +62,7 @@ type Manager struct {
 	config  ManagerConfig
 	actions *sh.SmartHomeActions
 
-	lock    sync.Mutex
+	lock    sync.Mutex // protects devices
 	devices map[string]Device
 }
 
@@ -159,7 +165,45 @@ func (m *Manager) Seen(ld Device, timeout time.Duration) error {
 }
 
 // Report reports the state of a device to Google.
-func (m *Manager) Report(user string, ld Device, states sh.States) error {
-	// TODO: unimplemented
+func (m *Manager) Report(ld Device, states sh.States) error {
+	client := m.config.ReportStateClient
+	if client == nil {
+		return errors.New("no client provided for Report (needs oauth)")
+	}
+
+	payload := struct {
+		Request string `json:"requestId"`
+		User    string `json:"agentUserId"`
+		Payload struct {
+			Devices struct {
+				States map[string]map[string]interface{} `json:"states"`
+			} `json:"devices"`
+		} `json:"payload"`
+	}{
+		User: "sam", // FIXME FIXME FIXME
+	}
+
+	payload.Payload.Devices.States = map[string]map[string]interface{}{
+		ld.ID(): states.Extract(),
+	}
+
+	b, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	buf := bytes.NewBuffer(b)
+	resp, err := client.Post(homegraphNotificationURL, "application/json", buf)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		body, _ := ioutil.ReadAll(resp.Body)
+		log.Printf("homegraph response:\n%v", string(body))
+		return fmt.Errorf("got non-200 from homegraph: %v", resp.StatusCode)
+	}
+
 	return nil
 }

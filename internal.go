@@ -97,9 +97,9 @@ func mergeStates(states []States) map[string]interface{} {
 	if len(states) == 0 {
 		return nil
 	}
-	out := states[0].extract()
+	out := states[0].Extract()
 	for _, s := range states[1:] {
-		out = intersectMap(out, s.extract())
+		out = intersectMap(out, s.Extract())
 	}
 	return out
 }

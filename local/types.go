@@ -1,6 +1,8 @@
 package local
 
 import (
+	"net/http"
+
 	sh "github.com/samthor/shactions"
 )
 
@@ -14,8 +16,9 @@ type Device interface {
 
 // ManagerConfig configures the Manager via NewManager.
 type ManagerConfig struct {
-	AgentUser func(string) (string, error) // converts Authorization header to AgentUserId
-	SyncKey   string
-	Storage   Storage
+	AgentUser         func(string) (string, error) // converts Authorization header to AgentUserId
+	ReportStateClient *http.Client
+	SyncKey           string
+	Storage           Storage
 	// TODO: add report state fucking magic
 }
