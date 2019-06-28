@@ -51,7 +51,8 @@ type resultValue struct {
 
 // resultGroup helps to group results from an exec request.
 type resultGroup struct {
-	m map[resultKey]resultValue
+	m    map[resultKey]resultValue
+	seen map[string]bool
 }
 
 func (rg *resultGroup) out() []commandResult {
@@ -67,10 +68,16 @@ func (rg *resultGroup) out() []commandResult {
 	return out
 }
 
-func (rg *resultGroup) add(device string, s ExecStatus) {
+func (rg *resultGroup) add(device string, s ExecStatus) bool {
 	if rg.m == nil {
 		rg.m = make(map[resultKey]resultValue)
+		rg.seen = make(map[string]bool)
 	}
+
+	if rg.seen[device] {
+		return true
+	}
+	rg.seen[device] = true
 
 	k := resultKey{s.Status, s.ErrorCode}
 	v := rg.m[k]
@@ -80,6 +87,7 @@ func (rg *resultGroup) add(device string, s ExecStatus) {
 	v.states = append(v.states, s.States)
 
 	rg.m[k] = v
+	return false
 }
 
 func mergeStates(states []States) map[string]interface{} {

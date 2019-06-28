@@ -3,6 +3,7 @@ package shactions
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 )
@@ -71,7 +72,10 @@ func (sh *SmartHomeActions) serve(r *http.Request, request assistantRequest) int
 
 			for i, s := range status {
 				device := command.Devices[i]
-				rg.add(device.ID, s)
+				seen := rg.add(device.ID, s)
+				if seen {
+					return fmt.Errorf("got duplicate device command: %v", device.ID)
+				}
 			}
 		}
 
