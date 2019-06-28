@@ -59,10 +59,6 @@ func (sh *SmartHomeActions) serve(r *http.Request, request assistantRequest) int
 	case "action.devices.EXECUTE":
 		var rg resultGroup
 		for _, command := range input.Payload.Commands {
-			// sanity-check we only get one command-per-device
-			// (docs are very vague, but seem to imply this)
-			// TODO: do this
-
 			status, err := fulfiller.Exec(command.Devices, command.Executions)
 			if err != nil {
 				return err // fail early
@@ -73,6 +69,9 @@ func (sh *SmartHomeActions) serve(r *http.Request, request assistantRequest) int
 			for i, s := range status {
 				device := command.Devices[i]
 				seen := rg.add(device.ID, s)
+
+				// sanity-check we only get one command-per-device
+				// (docs are very vague, but seem to imply this)
 				if seen {
 					return fmt.Errorf("got duplicate device command: %v", device.ID)
 				}

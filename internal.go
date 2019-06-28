@@ -74,19 +74,18 @@ func (rg *resultGroup) add(device string, s ExecStatus) bool {
 		rg.seen = make(map[string]bool)
 	}
 
-	if rg.seen[device] {
-		return true
-	}
-	rg.seen[device] = true
-
 	k := resultKey{s.Status, s.ErrorCode}
 	v := rg.m[k]
 
-	// TODO: check for duplicates
 	v.devices = append(v.devices, device)
 	v.states = append(v.states, s.States)
 
 	rg.m[k] = v
+
+	if rg.seen[device] {
+		return true
+	}
+	rg.seen[device] = true
 	return false
 }
 
